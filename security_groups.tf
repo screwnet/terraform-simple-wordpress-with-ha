@@ -1,76 +1,51 @@
-resource "aws_security_group" "simple_webserver_web" {
-  name        = "simple_webserver_web"
-  description = "Allow ssh and web traffic"
-  vpc_id      = aws_vpc.simple_webserver_vpc.id
+# Security groups and rules definitions
+
+
+#Security group for bastion access
+#Ideally only ssh (22) traffic needs to be allowed ingress
+resource "aws_security_group" "bastion_sg" {
+  name        = "wordpress_bastion_sg"
+  description = "Allow external networks to access internal resouces of VPC via SSH"
+  vpc_id      = aws_vpc.wordpress-vpc.id
   tags        = var.tags
 }
-resource "aws_security_group_rule" "allow_ssh_in_web" {
+
+#Security group rules for bastion sg
+resource "aws_security_group_rule" "allow_bastion_incoming_ssh" {
   type              = "ingress"
-  description       = "Allow ssh access"
+  description       = "Allow SSH access into bastion hosts"
   from_port         = 22
   to_port           = 22
   protocol          = "tcp"
   cidr_blocks       = var.allowed_ip_list
-  security_group_id = aws_security_group.simple_webserver_web.id
+  security_group_id = aws_security_group.bastion_sg.id
 }
-resource "aws_security_group_rule" "allow_all_out_web" {
+resource "aws_security_group_rule" "allow_bastion_incoming_all" {
+  #This rule is for development access
+  type              = "ingress"
+  description       = "Allow all access into bastion hosts"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = var.allowed_ip_list
+  security_group_id = aws_security_group.bastion_sg.id
+}
+resource "aws_security_group_rule" "allow_bastion_internal_all" {
+  #This rule is for development access
+  type                     = "ingress"
+  description              = "Allow all access internally in bastion hosts"
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "-1"
+  source_security_group_id = aws_security_group.bastion_sg.id
+  security_group_id        = aws_security_group.bastion_sg.id
+}
+resource "aws_security_group_rule" "allow_all_bastion_egress" {
   type              = "egress"
-  description       = "Allow all outgoing traffic"
+  description       = "Allow all egress traffic from bastion"
   from_port         = 0
   to_port           = 0
   protocol          = "-1"
   cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.simple_webserver_web.id
-}
-
-resource "aws_security_group" "simple_webserver_app" {
-  name        = "simple_webserver_app"
-  description = "Allow ssh and web traffic"
-  vpc_id      = aws_vpc.simple_webserver_vpc.id
-  tags        = var.tags
-}
-resource "aws_security_group_rule" "allow_ssh_in-app" {
-  type                     = "ingress"
-  description              = "Allow ssh access"
-  from_port                = 22
-  to_port                  = 22
-  protocol                 = "tcp"
-  source_security_group_id = aws_security_group.simple_webserver_web.id
-  security_group_id        = aws_security_group.simple_webserver_app.id
-}
-resource "aws_security_group_rule" "allow_db_in-app" {
-  type                     = "ingress"
-  description              = "Allow mysql/mariadb/aurora access"
-  from_port                = 3306
-  to_port                  = 3306
-  protocol                 = "tcp"
-  source_security_group_id = aws_security_group.simple_webserver_web.id
-  security_group_id        = aws_security_group.simple_webserver_app.id
-}
-resource "aws_security_group_rule" "allow_efs_in-app" {
-  type                     = "ingress"
-  description              = "Allow efs access"
-  from_port                = 111
-  to_port                  = 111
-  protocol                 = "tcp"
-  source_security_group_id = aws_security_group.simple_webserver_web.id
-  security_group_id        = aws_security_group.simple_webserver_app.id
-}
-resource "aws_security_group_rule" "allow_efs_in2-app" {
-  type                     = "ingress"
-  description              = "Allow efs access2"
-  from_port                = 2049
-  to_port                  = 2049
-  protocol                 = "tcp"
-  source_security_group_id = aws_security_group.simple_webserver_web.id
-  security_group_id        = aws_security_group.simple_webserver_app.id
-}
-resource "aws_security_group_rule" "allow_all_out_app" {
-  type              = "egress"
-  description       = "Allow all outgoing traffic"
-  from_port         = 0
-  to_port           = 0
-  protocol          = "-1"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.simple_webserver_app.id
+  security_group_id = aws_security_group.bastion_sg.id
 }
