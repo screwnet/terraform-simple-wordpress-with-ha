@@ -1,4 +1,3 @@
-# terraform-simple-wordpress-multi-layered
 WordPress Hosting on AWS with HA
 
 The deployment includes the following AWS components:
@@ -16,4 +15,4 @@ When the Wordpress requires database access, the connection is made from the ins
 S3 buckets are created for logging and storing CloudFront static files, separately.
 
 More to work:
-Split into multiple layers
+Split into multiple 

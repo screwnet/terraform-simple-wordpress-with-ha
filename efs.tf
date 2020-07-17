@@ -13,12 +13,12 @@ resource "aws_efs_file_system" "wp-filestore" {
 # EFS mount target for NFS
 resource "aws_efs_mount_target" "wp-filestore-mount-1" {
   file_system_id  = aws_efs_file_system.wp-filestore.id
-  subnet_id       = aws_subnet.simple_webserver_public-az1.id
-  security_groups = [aws_security_group.simple_webserver_app.id]
+  subnet_id       = aws_subnet.bastion_subnet1.id
+  security_groups = [aws_security_group.bastion_sg.id]
 }
 
 resource "aws_efs_mount_target" "wp-filestore-mount-2" {
   file_system_id  = aws_efs_file_system.wp-filestore.id
-  subnet_id       = aws_subnet.simple_webserver_private-app-az2.id
-  security_groups = [aws_security_group.simple_webserver_app.id]
+  subnet_id       = aws_subnet.bastion_subnet2.id
+  security_groups = [aws_security_group.bastion_sg.id]
 }
