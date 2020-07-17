@@ -13,6 +13,7 @@ resource "aws_lb" "wp_alb" {
   tags = var.tags
 }
 
+#Listen to HTTP and HTTPS traffic on LB
 resource "aws_lb_listener" "alb_listener_http" {
   load_balancer_arn = aws_lb.wp_alb.arn
   port              = 80
@@ -32,11 +33,37 @@ resource "aws_alb_listener_rule" "wp_http" {
   }
   condition {
     host_header {
-      values = ["nikhil.ninja"]
+      values = ["screwnet.work"]
     }
   }
 }
 
+resource "aws_lb_listener" "alb_listener_https" {
+  load_balancer_arn = aws_lb.wp_alb.arn
+  port              = 443
+  protocol          = "HTTPS"
+  certificate_arn   = aws_acm_certificate_validation.screwnetcert.certificate_arn
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.wp_tg.arn
+  }
+}
+
+resource "aws_alb_listener_rule" "wp_https" {
+  listener_arn = aws_lb_listener.alb_listener_https.arn
+  priority     = 10
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.wp_tg.arn
+  }
+  condition {
+    host_header {
+      values = ["screwnet.work"]
+    }
+  }
+}
+
+#Target group for ASG instances
 resource "aws_lb_target_group" "wp_tg" {
   name                 = "wordpress-tg"
   port                 = 80
